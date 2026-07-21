@@ -3,13 +3,45 @@ import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
+import { isApiError } from "@/lib/api/types";
+import { useAuth } from "@/context/AuthContext";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import React, { FormEvent, useState } from "react";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const { login } = useAuth();
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isSubmitting) return;
+    setFormError("");
+    setIsSubmitting(true);
+
+    try {
+      await login({ email: email.trim(), password, remember: isChecked });
+      const nextPath = new URLSearchParams(window.location.search).get("next");
+      router.replace(nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/");
+      router.refresh();
+    } catch (error) {
+      setFormError(
+        isApiError(error)
+          ? error.message
+          : "Unable to sign in. Please check your connection and try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -84,13 +116,22 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit} noValidate>
               <div className="space-y-6">
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="info@gmail.com" type="email" />
+                  <Input
+                    placeholder="info@gmail.com"
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    error={Boolean(formError)}
+                    required
+                  />
                 </div>
                 <div>
                   <Label>
@@ -100,6 +141,12 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
+                      name="password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      error={Boolean(formError)}
+                      required
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -127,9 +174,14 @@ export default function SignInForm() {
                     Forgot password?
                   </Link>
                 </div>
+                {formError && (
+                  <p className="text-sm text-error-500" role="alert">
+                    {formError}
+                  </p>
+                )}
                 <div>
-                  <Button className="w-full" size="sm">
-                    Sign in
+                  <Button className="w-full" size="sm" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Signing in..." : "Sign in"}
                   </Button>
                 </div>
               </div>

@@ -5,17 +5,8 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import {
-  BoxCubeIcon,
-  CalenderIcon,
   ChevronDownIcon,
-  GridIcon,
   HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
 
@@ -27,6 +18,7 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
+  /* Demo menu items are intentionally hidden. Their routes and page files remain available.
   {
     icon: <GridIcon />,
     name: "Dashboard",
@@ -61,9 +53,11 @@ const navItems: NavItem[] = [
       { name: "404 Error", path: "/error-404", pro: false },
     ],
   },
+  */
 ];
 
 const othersItems: NavItem[] = [
+  /* Demo menu items are intentionally hidden. Their routes and page files remain available.
   {
     icon: <PieChartIcon />,
     name: "Charts",
@@ -92,6 +86,7 @@ const othersItems: NavItem[] = [
       { name: "Sign Up", path: "/signup", pro: false },
     ],
   },
+  */
 ];
 
 const AppSidebar: React.FC = () => {

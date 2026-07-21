@@ -3,12 +3,53 @@ import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import { isApiError } from "@/lib/api/types";
+import { authService } from "@/lib/auth/service";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { FormEvent, useState } from "react";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isSubmitting) return;
+    setFormError("");
+    setSuccessMessage("");
+
+    if (!isChecked) {
+      setFormError("Please accept the Terms and Conditions and Privacy Policy.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await authService.register({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        password,
+      });
+      setSuccessMessage("Your account has been created. You can now sign in.");
+    } catch (error) {
+      setFormError(
+        isApiError(error)
+          ? error.message
+          : "Unable to create your account. Please check your connection and try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -83,7 +124,7 @@ export default function SignUpForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit} noValidate>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   {/* <!-- First Name --> */}
@@ -96,6 +137,11 @@ export default function SignUpForm() {
                       id="fname"
                       name="fname"
                       placeholder="Enter your first name"
+                      autoComplete="given-name"
+                      value={firstName}
+                      onChange={(event) => setFirstName(event.target.value)}
+                      error={Boolean(formError)}
+                      required
                     />
                   </div>
                   {/* <!-- Last Name --> */}
@@ -108,6 +154,11 @@ export default function SignUpForm() {
                       id="lname"
                       name="lname"
                       placeholder="Enter your last name"
+                      autoComplete="family-name"
+                      value={lastName}
+                      onChange={(event) => setLastName(event.target.value)}
+                      error={Boolean(formError)}
+                      required
                     />
                   </div>
                 </div>
@@ -121,6 +172,11 @@ export default function SignUpForm() {
                     id="email"
                     name="email"
                     placeholder="Enter your email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    error={Boolean(formError)}
+                    required
                   />
                 </div>
                 {/* <!-- Password --> */}
@@ -132,6 +188,13 @@ export default function SignUpForm() {
                     <Input
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
+                      name="password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      error={Boolean(formError)}
+                      required
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -163,10 +226,24 @@ export default function SignUpForm() {
                     </span>
                   </p>
                 </div>
+                {formError && (
+                  <p className="text-sm text-error-500" role="alert">
+                    {formError}
+                  </p>
+                )}
+                {successMessage && (
+                  <p className="text-sm text-success-500" role="status">
+                    {successMessage} <Link href="/signin" className="underline">Sign in</Link>
+                  </p>
+                )}
                 {/* <!-- Button --> */}
                 <div>
-                  <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    Sign Up
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Creating account..." : "Sign Up"}
                   </button>
                 </div>
               </div>
