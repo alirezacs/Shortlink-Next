@@ -1,3 +1,9 @@
+import type { PaginatedResult, PaginationMeta, SortOrder } from "@/lib/api/types";
+
+// Re-exported so the permission modules keep importing their pagination types
+// from one place, even though the shapes are shared with every other list.
+export type { PaginatedResult, PaginationMeta, SortOrder };
+
 export type PermissionRole = {
   id: string;
   name: string;
@@ -16,25 +22,9 @@ export type Permission = {
   updatedAt: string;
 };
 
-export type PaginationMeta = {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
-};
-
-export type PaginatedResult<T> = {
-  data: T[];
-  meta: PaginationMeta;
-};
-
 export const PERMISSION_SORT_FIELDS = ["name", "createdAt", "updatedAt"] as const;
 
 export type PermissionSortField = (typeof PERMISSION_SORT_FIELDS)[number];
-
-export type SortOrder = "ASC" | "DESC";
 
 export type PermissionListQuery = {
   page: number;

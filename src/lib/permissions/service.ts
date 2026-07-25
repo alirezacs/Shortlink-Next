@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api/client";
+import { apiClient, toSearchParams } from "@/lib/api/client";
 import type {
   PaginatedResult,
   Permission,
@@ -6,24 +6,31 @@ import type {
   PermissionListQuery,
 } from "@/lib/permissions/types";
 
-function toSearchParams(query: Partial<PermissionListQuery>) {
-  const params = new URLSearchParams();
+/** Largest page the API accepts, used when the whole catalogue is needed. */
+const MAX_LIMIT = 100;
 
-  for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined && value !== null && value !== "") {
-      params.set(key, String(value));
-    }
-  }
-
-  const search = params.toString();
-  return search ? `?${search}` : "";
-}
+/** Stops a broken `hasNextPage` from looping forever. */
+const MAX_PAGES = 20;
 
 class PermissionService {
   list(query: Partial<PermissionListQuery> = {}) {
     return apiClient.request<PaginatedResult<Permission>>(
       `/api/permissions${toSearchParams(query)}`,
     );
+  }
+
+  /** Every permission, for pickers that show the full catalogue at once. */
+  async listAll(): Promise<Permission[]> {
+    const permissions: Permission[] = [];
+
+    for (let page = 1; page <= MAX_PAGES; page += 1) {
+      const result = await this.list({ page, limit: MAX_LIMIT, sortBy: "name" });
+      permissions.push(...result.data);
+
+      if (!result.meta.hasNextPage) break;
+    }
+
+    return permissions;
   }
 
   groups() {

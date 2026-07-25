@@ -22,7 +22,10 @@ const navItems: NavItem[] = [
   {
     icon: <LockIcon />,
     name: "Access Control",
-    subItems: [{ name: "Permissions", path: "/permissions" }],
+    subItems: [
+      { name: "Roles", path: "/roles" },
+      { name: "Permissions", path: "/permissions" },
+    ],
   },
   /* Demo menu items are intentionally hidden. Their routes and page files remain available.
   {

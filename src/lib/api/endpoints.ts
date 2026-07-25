@@ -21,4 +21,9 @@ export const backendEndpoints = {
     groups: `${API_V1}/permissions/groups`,
     byId: (id: string) => `${API_V1}/permissions/${encodeURIComponent(id)}`,
   },
+  roles: {
+    /** List (GET) and create (POST). */
+    collection: `${API_V1}/roles`,
+    byId: (id: string) => `${API_V1}/roles/${encodeURIComponent(id)}`,
+  },
 } as const;

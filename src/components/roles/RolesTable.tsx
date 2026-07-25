@@ -19,15 +19,15 @@ import { useListParams } from "@/hooks/useListParams";
 import { PencilIcon, PlusIcon, TrashBinIcon } from "@/icons";
 import { isApiError } from "@/lib/api/types";
 import { hasPermission } from "@/lib/auth/permissions";
-import { permissionService } from "@/lib/permissions/service";
+import { roleService } from "@/lib/roles/service";
 import {
-  PERMISSION_SORT_FIELDS,
+  ROLE_SORT_FIELDS,
   type PaginatedResult,
-  type Permission,
-  type PermissionListQuery,
-  type PermissionSortField,
+  type Role,
+  type RoleListQuery,
+  type RoleSortField,
   type SortOrder,
-} from "@/lib/permissions/types";
+} from "@/lib/roles/types";
 import { formatDateTime } from "@/lib/utils/date";
 import {
   DEFAULT_PAGE_SIZE,
@@ -40,53 +40,54 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+const STATUS_OPTIONS = [
+  { value: "", label: "Any status" },
+  { value: "true", label: "Active" },
+  { value: "false", label: "Deactivated" },
+];
+
 const ASSIGNED_OPTIONS = [
   { value: "", label: "Any assignment" },
-  { value: "true", label: "Assigned to a role" },
+  { value: "true", label: "Assigned to a user" },
   { value: "false", label: "Not assigned" },
 ];
 
 const NOTICES: Record<string, string> = {
-  created: "Permission created successfully.",
-  updated: "Permission updated successfully.",
+  created: "Role created successfully.",
+  updated: "Role updated successfully.",
 };
 
-export default function PermissionsTable() {
+export default function RolesTable() {
   const { searchParams, updateParams, resetParams } = useListParams();
   const { user } = useAuth();
 
-  const canCreate = hasPermission(user, "permissions.create");
-  const canUpdate = hasPermission(user, "permissions.update");
-  const canDelete = hasPermission(user, "permissions.delete");
+  const canCreate = hasPermission(user, "roles.create");
+  const canUpdate = hasPermission(user, "roles.update");
+  const canDelete = hasPermission(user, "roles.delete");
 
   // The URL is the single source of truth for the list state, so every view is
   // shareable and survives a refresh or a back navigation.
   const page = parsePositiveInt(searchParams.get("page"), 1);
   const limit = parsePositiveInt(searchParams.get("limit"), DEFAULT_PAGE_SIZE);
   const search = searchParams.get("search") ?? "";
-  const group = searchParams.get("group") ?? "";
+  const isActive = searchParams.get("isActive") ?? "";
   const assigned = searchParams.get("assigned") ?? "";
-  const sortBy = parseSortField(
-    PERMISSION_SORT_FIELDS,
-    searchParams.get("sortBy"),
-    "name",
-  );
+  const sortBy = parseSortField(ROLE_SORT_FIELDS, searchParams.get("sortBy"), "name");
   const sortOrder: SortOrder = searchParams.get("sortOrder") === "DESC" ? "DESC" : "ASC";
   const notice = searchParams.get("notice") ?? "";
 
-  const query = useMemo<PermissionListQuery>(
-    () => ({ page, limit, search, group, assigned, sortBy, sortOrder }),
-    [assigned, group, limit, page, search, sortBy, sortOrder],
+  const query = useMemo<RoleListQuery>(
+    () => ({ page, limit, search, isActive, assigned, sortBy, sortOrder }),
+    [assigned, isActive, limit, page, search, sortBy, sortOrder],
   );
 
-  const [result, setResult] = useState<PaginatedResult<Permission> | null>(null);
+  const [result, setResult] = useState<PaginatedResult<Role> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [groups, setGroups] = useState<string[]>([]);
   const [refreshToken, setRefreshToken] = useState(0);
   const [flash, setFlash] = useState("");
   const [searchDraft, setSearchDraft] = useState(search);
-  const [pendingDelete, setPendingDelete] = useState<Permission | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Role | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
@@ -94,7 +95,7 @@ export default function PermissionsTable() {
     let ignore = false;
     setIsLoading(true);
 
-    permissionService
+    roleService
       .list(query)
       .then((response) => {
         if (ignore) return;
@@ -104,9 +105,7 @@ export default function PermissionsTable() {
       .catch((error: unknown) => {
         if (ignore) return;
         setResult(null);
-        setLoadError(
-          isApiError(error) ? error.message : "Unable to load permissions.",
-        );
+        setLoadError(isApiError(error) ? error.message : "Unable to load roles.");
       })
       .finally(() => {
         if (!ignore) setIsLoading(false);
@@ -116,24 +115,6 @@ export default function PermissionsTable() {
       ignore = true;
     };
   }, [query, refreshToken]);
-
-  // Group options come from the API so the filter always matches stored data.
-  useEffect(() => {
-    let ignore = false;
-
-    permissionService
-      .groups()
-      .then((response) => {
-        if (!ignore) setGroups(response);
-      })
-      .catch(() => {
-        if (!ignore) setGroups([]);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [refreshToken]);
 
   // Keep the input in sync when the URL changes from outside (reset, back button).
   useEffect(() => {
@@ -166,7 +147,7 @@ export default function PermissionsTable() {
     updateParams({});
   }, [notice, updateParams]);
 
-  const handleSort = (field: PermissionSortField) => {
+  const handleSort = (field: RoleSortField) => {
     if (sortBy === field) {
       updateParams({ sortBy: field, sortOrder: sortOrder === "ASC" ? "DESC" : "ASC" });
       return;
@@ -186,13 +167,13 @@ export default function PermissionsTable() {
     setDeleteError("");
 
     try {
-      await permissionService.remove(pendingDelete.id);
-      setFlash(`Permission "${pendingDelete.name}" was deleted.`);
+      await roleService.remove(pendingDelete.id);
+      setFlash(`Role "${pendingDelete.name}" was deleted.`);
       setPendingDelete(null);
       setRefreshToken((token) => token + 1);
     } catch (error) {
       setDeleteError(
-        isApiError(error) ? error.message : "Unable to delete this permission.",
+        isApiError(error) ? error.message : "Unable to delete this role.",
       );
     } finally {
       setIsDeleting(false);
@@ -204,41 +185,33 @@ export default function PermissionsTable() {
     resetParams();
   };
 
-  const groupOptions = withCurrentValue(
-    [
-      { value: "", label: "All groups" },
-      ...groups.map((name) => ({ value: name, label: name })),
-    ],
-    group,
-  );
-
   const hasActiveFilters =
-    Boolean(search || group || assigned) ||
+    Boolean(search || isActive || assigned) ||
     sortBy !== "name" ||
     sortOrder !== "ASC" ||
     limit !== DEFAULT_PAGE_SIZE;
 
-  const permissions = result?.data ?? [];
+  const roles = result?.data ?? [];
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
-            All permissions
+            All roles
           </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {isLoading && !result
-              ? "Loading permissions..."
+              ? "Loading roles..."
               : `${result?.meta.total ?? 0} ${
-                  result?.meta.total === 1 ? "permission" : "permissions"
+                  result?.meta.total === 1 ? "role" : "roles"
                 } found`}
           </p>
         </div>
 
         {canCreate && (
-          <ButtonLink href="/permissions/create" size="sm" startIcon={<PlusIcon />}>
-            Add permission
+          <ButtonLink href="/roles/create" size="sm" startIcon={<PlusIcon />}>
+            Add role
           </ButtonLink>
         )}
       </div>
@@ -250,23 +223,23 @@ export default function PermissionsTable() {
             placeholder="Search by name or description..."
             value={searchDraft}
             onChange={(event) => setSearchDraft(event.target.value)}
-            aria-label="Search permissions"
+            aria-label="Search roles"
           />
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:ml-auto lg:w-auto lg:grid-cols-3">
           <SelectField
-            options={groupOptions}
-            value={group}
-            onChange={(value) => updateParams({ group: value }, { resetPage: true })}
-            aria-label="Filter by group"
+            options={withCurrentValue(STATUS_OPTIONS, isActive)}
+            value={isActive}
+            onChange={(value) => updateParams({ isActive: value }, { resetPage: true })}
+            aria-label="Filter by status"
             className="lg:w-40"
           />
           <SelectField
-            options={ASSIGNED_OPTIONS}
+            options={withCurrentValue(ASSIGNED_OPTIONS, assigned)}
             value={assigned}
             onChange={(value) => updateParams({ assigned: value }, { resetPage: true })}
-            aria-label="Filter by role assignment"
+            aria-label="Filter by user assignment"
             className="lg:w-48"
           />
           <SelectField
@@ -321,14 +294,14 @@ export default function PermissionsTable() {
 
       <div
         className={`overflow-x-auto border-t border-gray-100 transition-opacity dark:border-gray-800 ${
-          isLoading && permissions.length > 0 ? "opacity-60" : ""
+          isLoading && roles.length > 0 ? "opacity-60" : ""
         }`}
       >
         <Table>
           <TableHeader className="border-b border-gray-100 dark:border-gray-800">
             <TableRow>
               <SortableTableHeader
-                label="Permission"
+                label="Role"
                 field="name"
                 sortBy={sortBy}
                 sortOrder={sortOrder}
@@ -338,13 +311,19 @@ export default function PermissionsTable() {
                 isHeader
                 className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
               >
-                Group
+                Status
               </TableCell>
               <TableCell
                 isHeader
                 className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
               >
-                Roles
+                Permissions
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
+              >
+                Users
               </TableCell>
               <SortableTableHeader
                 label="Created"
@@ -370,14 +349,14 @@ export default function PermissionsTable() {
           </TableHeader>
 
           <TableBody>
-            {isLoading && permissions.length === 0 && (
+            {isLoading && roles.length === 0 && (
               <>
                 {Array.from({ length: 5 }).map((_, index) => (
                   <TableRow
                     key={`skeleton-${index}`}
                     className="border-b border-gray-100 dark:border-gray-800"
                   >
-                    {Array.from({ length: 6 }).map((__, cell) => (
+                    {Array.from({ length: 7 }).map((__, cell) => (
                       <TableCell key={`skeleton-cell-${cell}`} className="px-5 py-4">
                         <div className="h-4 w-full animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
                       </TableCell>
@@ -387,64 +366,81 @@ export default function PermissionsTable() {
               </>
             )}
 
-            {!isLoading && permissions.length === 0 && !loadError && (
+            {!isLoading && roles.length === 0 && !loadError && (
               <TableRow>
-                <TableCell className="px-5 py-12 text-center" colSpan={6}>
+                <TableCell className="px-5 py-12 text-center" colSpan={7}>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    No permissions found
+                    No roles found
                   </p>
                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     {hasActiveFilters
                       ? "Try a different search term or clear the filters."
-                      : "Create your first permission to get started."}
+                      : "Create your first role to get started."}
                   </p>
                 </TableCell>
               </TableRow>
             )}
 
-            {permissions.map((permission) => (
+            {roles.map((role) => (
               <TableRow
-                key={permission.id}
+                key={role.id}
                 className="border-b border-gray-100 last:border-b-0 dark:border-gray-800"
               >
                 <TableCell className="px-5 py-4">
                   <span className="block font-medium text-gray-800 dark:text-white/90">
-                    {permission.name}
+                    {role.name}
                   </span>
                   <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">
-                    {permission.description || "No description"}
+                    {role.description || "No description"}
                   </span>
                 </TableCell>
                 <TableCell className="px-5 py-4">
-                  <Badge variant="light" color="light" size="sm">
-                    {permission.group}
+                  <Badge
+                    variant="light"
+                    color={role.isActive ? "success" : "light"}
+                    size="sm"
+                  >
+                    {role.isActive ? "Active" : "Deactivated"}
                   </Badge>
                 </TableCell>
                 <TableCell className="px-5 py-4">
                   <Badge
                     variant="light"
-                    color={permission.rolesCount > 0 ? "success" : "warning"}
+                    color={role.permissionsCount > 0 ? "primary" : "warning"}
                     size="sm"
                   >
-                    {permission.rolesCount === 0
+                    {role.permissionsCount === 0
+                      ? "No permissions"
+                      : `${role.permissionsCount} ${
+                          role.permissionsCount === 1 ? "permission" : "permissions"
+                        }`}
+                  </Badge>
+                </TableCell>
+                <TableCell className="px-5 py-4">
+                  <Badge
+                    variant="light"
+                    color={role.usersCount > 0 ? "success" : "warning"}
+                    size="sm"
+                  >
+                    {role.usersCount === 0
                       ? "Unassigned"
-                      : `${permission.rolesCount} ${
-                          permission.rolesCount === 1 ? "role" : "roles"
+                      : `${role.usersCount} ${
+                          role.usersCount === 1 ? "user" : "users"
                         }`}
                   </Badge>
                 </TableCell>
                 <TableCell className="px-5 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                  {formatDateTime(permission.createdAt)}
+                  {formatDateTime(role.createdAt)}
                 </TableCell>
                 <TableCell className="px-5 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                  {formatDateTime(permission.updatedAt)}
+                  {formatDateTime(role.updatedAt)}
                 </TableCell>
                 <TableCell className="px-5 py-4">
                   <div className="flex items-center justify-end gap-2">
                     {canUpdate && (
                       <Link
-                        href={`/permissions/${permission.id}/edit`}
-                        aria-label={`Edit ${permission.name}`}
+                        href={`/roles/${role.id}/edit`}
+                        aria-label={`Edit ${role.name}`}
                         title="Edit"
                         className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 text-gray-500 transition hover:bg-gray-50 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
                       >
@@ -456,9 +452,9 @@ export default function PermissionsTable() {
                         type="button"
                         onClick={() => {
                           setDeleteError("");
-                          setPendingDelete(permission);
+                          setPendingDelete(role);
                         }}
-                        aria-label={`Delete ${permission.name}`}
+                        aria-label={`Delete ${role.name}`}
                         title="Delete"
                         className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 text-gray-500 transition hover:border-error-500 hover:bg-error-50 hover:text-error-500 dark:border-gray-700 dark:text-gray-400 dark:hover:border-error-500 dark:hover:bg-error-500/10 dark:hover:text-error-500"
                       >
@@ -490,17 +486,17 @@ export default function PermissionsTable() {
 
       <ConfirmDeleteModal
         isOpen={pendingDelete !== null}
-        title="Delete permission"
+        title="Delete role"
         description={
           <>
-            This permanently removes{" "}
+            This removes{" "}
             <span className="font-medium text-gray-700 dark:text-gray-300">
               {pendingDelete?.name}
             </span>
-            . Roles that rely on it will lose the access it grants.
+            . Users holding it will lose every permission it grants.
           </>
         }
-        confirmLabel="Delete permission"
+        confirmLabel="Delete role"
         isDeleting={isDeleting}
         error={deleteError}
         onClose={() => {

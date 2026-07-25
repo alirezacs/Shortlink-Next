@@ -7,6 +7,21 @@ type RequestOptions = Omit<RequestInit, "body"> & {
 
 const AUTH_EXPIRED_EVENT = "auth:expired";
 
+/** Serializes a list query, dropping empty values so the API applies its own
+ * defaults instead of receiving a blank filter. */
+export function toSearchParams(query: Record<string, unknown>): string {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== null && value !== "") {
+      params.set(key, String(value));
+    }
+  }
+
+  const search = params.toString();
+  return search ? `?${search}` : "";
+}
+
 class ApiClient {
   async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
     const { body, retryOnUnauthorized = true, headers, ...requestOptions } = options;
