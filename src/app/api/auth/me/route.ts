@@ -4,6 +4,30 @@ import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+type BackendRole = {
+  name?: unknown;
+  permissions?: unknown;
+};
+
+function isBackendRole(role: unknown): role is BackendRole {
+  return typeof role === "object" && role !== null;
+}
+
+/** Flattens role permissions so the dashboard can hide actions the API would reject. */
+function toPermissionNames(roles: unknown[]) {
+  const names = roles.flatMap((role) =>
+    isBackendRole(role) && Array.isArray(role.permissions)
+      ? role.permissions.flatMap((permission) =>
+          isBackendRole(permission) && typeof permission.name === "string"
+            ? [permission.name]
+            : [],
+        )
+      : [],
+  );
+
+  return [...new Set(names)];
+}
+
 function toCurrentUser(user: unknown) {
   if (typeof user !== "object" || user === null) {
     throw new Error("Authentication service returned an invalid user.");
@@ -26,10 +50,11 @@ function toCurrentUser(user: unknown) {
     email: value.email,
     roles: Array.isArray(value.roles)
       ? value.roles.flatMap((role) =>
-          typeof role === "object" && role !== null && typeof role.name === "string"
-            ? [role.name]
-            : [],
+          isBackendRole(role) && typeof role.name === "string" ? [role.name] : [],
         )
+      : undefined,
+    permissions: Array.isArray(value.roles)
+      ? toPermissionNames(value.roles)
       : undefined,
   };
 }

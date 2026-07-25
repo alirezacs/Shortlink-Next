@@ -7,6 +7,7 @@ import { useSidebar } from "../context/SidebarContext";
 import {
   ChevronDownIcon,
   HorizontaLDots,
+  LockIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
 
@@ -18,6 +19,11 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
+  {
+    icon: <LockIcon />,
+    name: "Access Control",
+    subItems: [{ name: "Permissions", path: "/permissions" }],
+  },
   /* Demo menu items are intentionally hidden. Their routes and page files remain available.
   {
     icon: <GridIcon />,
@@ -228,8 +234,12 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => path === pathname;
-   const isActive = useCallback((path: string) => path === pathname, [pathname]);
+  // Nested routes such as /permissions/create keep their parent item highlighted.
+  const isActive = useCallback(
+    (path: string) =>
+      pathname === path || (path !== "/" && pathname.startsWith(`${path}/`)),
+    [pathname]
+  );
 
   useEffect(() => {
     // Check if the current path matches any submenu item

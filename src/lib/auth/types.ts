@@ -4,6 +4,8 @@ export type AuthUser = {
   lastName: string;
   email: string;
   roles?: string[];
+  /** Flattened role permissions, for example `permissions.create`. */
+  permissions?: string[];
 };
 
 export type LoginCredentials = {
