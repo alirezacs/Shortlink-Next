@@ -1,4 +1,5 @@
 import { backendClient } from "@/lib/api/backend-client";
+import { backendEndpoints } from "@/lib/api/endpoints";
 import { isApiError } from "@/lib/api/types";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const user = await backendClient.request<unknown>("/auth/register", {
+    const user = await backendClient.request<unknown>(backendEndpoints.auth.register, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

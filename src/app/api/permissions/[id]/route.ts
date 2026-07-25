@@ -1,4 +1,5 @@
 import { backendClient } from "@/lib/api/backend-client";
+import { backendEndpoints } from "@/lib/api/endpoints";
 import {
   invalidBodyResponse,
   readJsonBody,
@@ -8,9 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-function permissionPath(id: string) {
-  return `/permissions/${encodeURIComponent(id)}`;
-}
+const permissionPath = backendEndpoints.permissions.byId;
 
 export async function GET(_request: NextRequest, { params }: RouteContext) {
   const { id } = await params;

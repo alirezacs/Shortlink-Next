@@ -1,4 +1,5 @@
 import { backendClient } from "@/lib/api/backend-client";
+import { backendEndpoints } from "@/lib/api/endpoints";
 import {
   forwardSearchParams,
   invalidBodyResponse,
@@ -22,7 +23,10 @@ export async function GET(request: NextRequest) {
 
   return withAccessToken(async (accessToken) =>
     NextResponse.json(
-      await backendClient.request<unknown>(`/permissions${query}`, { accessToken }),
+      await backendClient.request<unknown>(
+        `${backendEndpoints.permissions.collection}${query}`,
+        { accessToken },
+      ),
     ),
   );
 }
@@ -35,7 +39,7 @@ export async function POST(request: NextRequest) {
 
   return withAccessToken(async (accessToken) =>
     NextResponse.json(
-      await backendClient.request<unknown>("/permissions", {
+      await backendClient.request<unknown>(backendEndpoints.permissions.collection, {
         method: "POST",
         accessToken,
         headers: { "Content-Type": "application/json" },

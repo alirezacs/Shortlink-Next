@@ -1,4 +1,5 @@
 import { backendClient } from "@/lib/api/backend-client";
+import { backendEndpoints } from "@/lib/api/endpoints";
 import { isApiError } from "@/lib/api/types";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/server";
 import { cookies } from "next/headers";
@@ -66,7 +67,7 @@ export async function GET() {
   }
 
   try {
-    const user = await backendClient.request<unknown>("/auth/me", { accessToken });
+    const user = await backendClient.request<unknown>(backendEndpoints.auth.me, { accessToken });
     return NextResponse.json(toCurrentUser(user));
   } catch (error) {
     if (isApiError(error)) {

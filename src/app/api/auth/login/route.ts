@@ -1,4 +1,5 @@
 import { backendClient } from "@/lib/api/backend-client";
+import { backendEndpoints } from "@/lib/api/endpoints";
 import { isApiError } from "@/lib/api/types";
 import { setAuthCookies } from "@/lib/auth/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const tokens = await backendClient.request<{ accessToken?: unknown; refreshToken?: unknown }>("/auth/login", {
+    const tokens = await backendClient.request<{ accessToken?: unknown; refreshToken?: unknown }>(backendEndpoints.auth.login, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: payload.email, password: payload.password }),

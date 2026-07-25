@@ -1,4 +1,5 @@
 import { backendClient } from "@/lib/api/backend-client";
+import { backendEndpoints } from "@/lib/api/endpoints";
 import { isApiError } from "@/lib/api/types";
 import { clearAuthCookies, REFRESH_TOKEN_COOKIE, setAuthCookies } from "@/lib/auth/server";
 import { cookies } from "next/headers";
@@ -15,7 +16,7 @@ export async function POST() {
   try {
     // The current NestJS API does not expose this endpoint yet. Once enabled,
     // this BFF route handles token rotation without exposing either token to JS.
-    const tokens = await backendClient.request<{ accessToken?: unknown; refreshToken?: unknown }>("/auth/refresh", {
+    const tokens = await backendClient.request<{ accessToken?: unknown; refreshToken?: unknown }>(backendEndpoints.auth.refresh, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
