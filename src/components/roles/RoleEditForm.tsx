@@ -3,7 +3,7 @@
 import RoleForm from "@/components/roles/RoleForm";
 import Badge from "@/components/ui/badge/Badge";
 import ButtonLink from "@/components/ui/button/ButtonLink";
-import { isApiError } from "@/lib/api/types";
+import { isApiError, toErrorMessage } from "@/lib/api/types";
 import { roleService } from "@/lib/roles/service";
 import type { Role } from "@/lib/roles/types";
 import { formatDateTime } from "@/lib/utils/date";
@@ -38,9 +38,7 @@ export default function RoleEditForm({ roleId }: RoleEditFormProps) {
           error:
             isApiError(error) && error.status === 404
               ? "This role no longer exists."
-              : isApiError(error)
-              ? error.message
-              : "Unable to load this role.",
+              : toErrorMessage(error, "Unable to load this role."),
         });
       });
 

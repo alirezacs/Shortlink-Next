@@ -1,5 +1,6 @@
 "use client";
 
+import Can from "@/components/authorization/Can";
 import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 import SelectField from "@/components/form/SelectField";
 import Input from "@/components/form/input/InputField";
@@ -14,11 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAuth } from "@/context/AuthContext";
 import { useListParams } from "@/hooks/useListParams";
+import { useAuthorization } from "@/hooks/useAuthorization";
 import { PencilIcon, PlusIcon, TrashBinIcon } from "@/icons";
-import { isApiError } from "@/lib/api/types";
-import { hasPermission } from "@/lib/auth/permissions";
+import { toErrorMessage } from "@/lib/api/types";
+import { PERMISSIONS } from "@/lib/authz";
 import { roleService } from "@/lib/roles/service";
 import {
   ROLE_SORT_FIELDS,
@@ -59,11 +60,12 @@ const NOTICES: Record<string, string> = {
 
 export default function RolesTable() {
   const { searchParams, updateParams, resetParams } = useListParams();
-  const { user } = useAuth();
+  const { can } = useAuthorization();
 
-  const canCreate = hasPermission(user, "roles.create");
-  const canUpdate = hasPermission(user, "roles.update");
-  const canDelete = hasPermission(user, "roles.delete");
+  // Row actions read the hook because they also decide the "View only" state;
+  // the toolbar button is a plain `<Can>` since it only has to appear or not.
+  const canUpdate = can(PERMISSIONS.ROLES.UPDATE);
+  const canDelete = can(PERMISSIONS.ROLES.DELETE);
 
   // The URL is the single source of truth for the list state, so every view is
   // shareable and survives a refresh or a back navigation.
@@ -105,7 +107,7 @@ export default function RolesTable() {
       .catch((error: unknown) => {
         if (ignore) return;
         setResult(null);
-        setLoadError(isApiError(error) ? error.message : "Unable to load roles.");
+        setLoadError(toErrorMessage(error, "Unable to load roles."));
       })
       .finally(() => {
         if (!ignore) setIsLoading(false);
@@ -173,7 +175,7 @@ export default function RolesTable() {
       setRefreshToken((token) => token + 1);
     } catch (error) {
       setDeleteError(
-        isApiError(error) ? error.message : "Unable to delete this role.",
+        toErrorMessage(error, "Unable to delete this role."),
       );
     } finally {
       setIsDeleting(false);
@@ -209,11 +211,11 @@ export default function RolesTable() {
           </p>
         </div>
 
-        {canCreate && (
+        <Can permission={PERMISSIONS.ROLES.CREATE}>
           <ButtonLink href="/roles/create" size="sm" startIcon={<PlusIcon />}>
             Add role
           </ButtonLink>
-        )}
+        </Can>
       </div>
 
       <div className="flex flex-col gap-3 border-t border-gray-100 px-5 py-4 dark:border-gray-800 lg:flex-row lg:items-center">

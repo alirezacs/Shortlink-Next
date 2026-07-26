@@ -2,6 +2,7 @@ import { backendClient } from "@/lib/api/backend-client";
 import { backendEndpoints } from "@/lib/api/endpoints";
 import { isApiError } from "@/lib/api/types";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/server";
+import type { AuthUser } from "@/lib/auth/types";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -29,7 +30,7 @@ function toPermissionNames(roles: unknown[]) {
   return [...new Set(names)];
 }
 
-function toCurrentUser(user: unknown) {
+function toCurrentUser(user: unknown): AuthUser {
   if (typeof user !== "object" || user === null) {
     throw new Error("Authentication service returned an invalid user.");
   }
@@ -44,19 +45,20 @@ function toCurrentUser(user: unknown) {
     throw new Error("Authentication service returned an invalid user.");
   }
 
+  // Both lists are always arrays, never undefined: the authorization layer is
+  // fail-closed, so "we could not read the roles" must look like "no access"
+  // rather than degrade into an implicit allow.
+  const roles = Array.isArray(value.roles) ? value.roles : [];
+
   return {
     id: value.id,
     firstName: value.firstName,
     lastName: value.lastName,
     email: value.email,
-    roles: Array.isArray(value.roles)
-      ? value.roles.flatMap((role) =>
-          isBackendRole(role) && typeof role.name === "string" ? [role.name] : [],
-        )
-      : undefined,
-    permissions: Array.isArray(value.roles)
-      ? toPermissionNames(value.roles)
-      : undefined,
+    roles: roles.flatMap((role) =>
+      isBackendRole(role) && typeof role.name === "string" ? [role.name] : [],
+    ),
+    permissions: toPermissionNames(roles),
   };
 }
 

@@ -1,5 +1,10 @@
 import { apiClient } from "@/lib/api/client";
-import type { AuthUser, LoginCredentials, RegisterInput } from "@/lib/auth/types";
+import type {
+  AuthUser,
+  LoginCredentials,
+  RegisteredUser,
+  RegisterInput,
+} from "@/lib/auth/types";
 
 class AuthService {
   login(credentials: LoginCredentials) {
@@ -11,7 +16,7 @@ class AuthService {
   }
 
   register(input: RegisterInput) {
-    return apiClient.request<AuthUser>("/api/auth/register", {
+    return apiClient.request<RegisteredUser>("/api/auth/register", {
       method: "POST",
       body: input,
       retryOnUnauthorized: false,

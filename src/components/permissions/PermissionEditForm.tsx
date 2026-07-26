@@ -3,7 +3,7 @@
 import PermissionForm from "@/components/permissions/PermissionForm";
 import Badge from "@/components/ui/badge/Badge";
 import ButtonLink from "@/components/ui/button/ButtonLink";
-import { isApiError } from "@/lib/api/types";
+import { isApiError, toErrorMessage } from "@/lib/api/types";
 import { permissionService } from "@/lib/permissions/service";
 import type { Permission } from "@/lib/permissions/types";
 import { formatDateTime } from "@/lib/utils/date";
@@ -38,9 +38,7 @@ export default function PermissionEditForm({ permissionId }: PermissionEditFormP
           error:
             isApiError(error) && error.status === 404
               ? "This permission no longer exists."
-              : isApiError(error)
-              ? error.message
-              : "Unable to load this permission.",
+              : toErrorMessage(error, "Unable to load this permission."),
         });
       });
 

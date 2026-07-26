@@ -1,7 +1,7 @@
 "use client";
 
 import Checkbox from "@/components/form/input/Checkbox";
-import { isApiError } from "@/lib/api/types";
+import { toErrorMessage } from "@/lib/api/types";
 import { permissionService } from "@/lib/permissions/service";
 import type { Permission } from "@/lib/permissions/types";
 import { useEffect, useMemo, useState } from "react";
@@ -62,9 +62,9 @@ export default function RolePermissionsField({
 
         setState({
           status: "error",
-          error: isApiError(error)
-            ? error.message
-            : "Unable to load the permission catalogue.",
+          // A 403 here is expected for an account that may manage roles but not
+          // read the permission catalogue: the rest of the form stays usable.
+          error: toErrorMessage(error, "Unable to load the permission catalogue."),
         });
       });
 

@@ -7,7 +7,7 @@ import Switch from "@/components/form/switch/Switch";
 import RolePermissionsField from "@/components/roles/RolePermissionsField";
 import Button from "@/components/ui/button/Button";
 import ButtonLink from "@/components/ui/button/ButtonLink";
-import { isApiError } from "@/lib/api/types";
+import { toErrorMessage } from "@/lib/api/types";
 import { roleService } from "@/lib/roles/service";
 import {
   ROLE_NAME_HINT,
@@ -96,9 +96,7 @@ export default function RoleForm({ role }: RoleFormProps) {
       router.push(`/roles?notice=${isEditing ? "updated" : "created"}`);
     } catch (error) {
       setFormError(
-        isApiError(error)
-          ? error.message
-          : "Unable to save this role. Please try again.",
+        toErrorMessage(error, "Unable to save this role. Please try again."),
       );
       setIsSubmitting(false);
     }

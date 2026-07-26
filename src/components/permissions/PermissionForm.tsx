@@ -5,7 +5,7 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Button from "@/components/ui/button/Button";
 import ButtonLink from "@/components/ui/button/ButtonLink";
-import { isApiError } from "@/lib/api/types";
+import { toErrorMessage } from "@/lib/api/types";
 import { permissionService } from "@/lib/permissions/service";
 import {
   PERMISSION_NAME_HINT,
@@ -87,9 +87,7 @@ export default function PermissionForm({ permission }: PermissionFormProps) {
       router.push(`/permissions?notice=${isEditing ? "updated" : "created"}`);
     } catch (error) {
       setFormError(
-        isApiError(error)
-          ? error.message
-          : "Unable to save this permission. Please try again.",
+        toErrorMessage(error, "Unable to save this permission. Please try again."),
       );
       setIsSubmitting(false);
     }
