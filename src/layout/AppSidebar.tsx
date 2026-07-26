@@ -11,7 +11,6 @@ import {
   ChevronDownIcon,
   HorizontaLDots,
 } from "../icons/index";
-import SidebarWidget from "./SidebarWidget";
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
@@ -318,7 +317,6 @@ const AppSidebar: React.FC = () => {
             )}
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
       </div>
     </aside>
   );
