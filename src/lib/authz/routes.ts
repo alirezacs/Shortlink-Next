@@ -57,6 +57,11 @@ export const ROUTE_PERMISSIONS: readonly RoutePermission[] = [
     create: PERMISSIONS.ROLES.CREATE,
     update: PERMISSIONS.ROLES.UPDATE,
   }),
+  ...crudRoutePermissions("/users", {
+    read: PERMISSIONS.USERS.READ,
+    create: PERMISSIONS.USERS.CREATE,
+    update: PERMISSIONS.USERS.UPDATE,
+  }),
 ];
 
 function toSegments(path: string): string[] {

@@ -1,4 +1,4 @@
-import { LockIcon } from "@/icons/index";
+import { GroupIcon, LockIcon } from "@/icons/index";
 import { PERMISSIONS, type NavItem } from "@/lib/authz";
 
 /**
@@ -12,6 +12,12 @@ import { PERMISSIONS, type NavItem } from "@/lib/authz";
  * this decides what is *shown*, that decides what can be *opened*.
  */
 export const mainNavItems: NavItem[] = [
+  {
+    icon: <GroupIcon />,
+    name: "Users",
+    path: "/users",
+    rule: { permission: PERMISSIONS.USERS.READ },
+  },
   {
     icon: <LockIcon />,
     name: "Access Control",

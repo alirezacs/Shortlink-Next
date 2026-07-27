@@ -26,4 +26,9 @@ export const backendEndpoints = {
     collection: `${API_V1}/roles`,
     byId: (id: string) => `${API_V1}/roles/${encodeURIComponent(id)}`,
   },
+  users: {
+    /** List (GET) and create (POST). */
+    collection: `${API_V1}/users`,
+    byId: (id: string) => `${API_V1}/users/${encodeURIComponent(id)}`,
+  },
 } as const;
