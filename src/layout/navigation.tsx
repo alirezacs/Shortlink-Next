@@ -1,4 +1,4 @@
-import { GroupIcon, LockIcon } from "@/icons/index";
+import { GroupIcon, LockIcon, TaskIcon } from "@/icons/index";
 import { PERMISSIONS, type NavItem } from "@/lib/authz";
 
 /**
@@ -17,6 +17,22 @@ export const mainNavItems: NavItem[] = [
     name: "Users",
     path: "/users",
     rule: { permission: PERMISSIONS.USERS.READ },
+  },
+  {
+    icon: <TaskIcon />,
+    name: "Settings",
+    subItems: [
+      {
+        name: "Settings",
+        path: "/settings",
+        rule: { permission: PERMISSIONS.SETTINGS.READ },
+      },
+      {
+        name: "Categories",
+        path: "/settings/categories",
+        rule: { permission: PERMISSIONS.SETTING_CATEGORIES.READ },
+      },
+    ],
   },
   {
     icon: <LockIcon />,

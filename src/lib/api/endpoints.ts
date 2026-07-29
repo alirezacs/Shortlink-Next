@@ -31,4 +31,12 @@ export const backendEndpoints = {
     collection: `${API_V1}/users`,
     byId: (id: string) => `${API_V1}/users/${encodeURIComponent(id)}`,
   },
+  settings: {
+    collection: `${API_V1}/settings`,
+    byId: (id: string) => `${API_V1}/settings/${encodeURIComponent(id)}`,
+    categories: {
+      collection: `${API_V1}/settings/categories`,
+      byId: (id: string) => `${API_V1}/settings/categories/${encodeURIComponent(id)}`,
+    },
+  },
 } as const;

@@ -26,6 +26,18 @@ export const PERMISSIONS = {
     UPDATE: "permissions.update",
     DELETE: "permissions.delete",
   },
+  SETTINGS: {
+    READ: "settings.read",
+    CREATE: "settings.create",
+    UPDATE: "settings.update",
+    DELETE: "settings.delete",
+  },
+  SETTING_CATEGORIES: {
+    READ: "settings.categories.read",
+    CREATE: "settings.categories.create",
+    UPDATE: "settings.categories.update",
+    DELETE: "settings.categories.delete",
+  },
 } as const;
 
 type PermissionRegistry = typeof PERMISSIONS;
