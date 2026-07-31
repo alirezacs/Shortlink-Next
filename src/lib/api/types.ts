@@ -2,6 +2,36 @@ export type ApiErrorBody = {
   message?: string | string[];
 };
 
+/** Pull a user-facing message out of Nest/BFF error JSON (top-level or nested). */
+export function toErrorBody(body: unknown): ApiErrorBody {
+  if (typeof body !== "object" || body === null) {
+    return {};
+  }
+
+  const record = body as {
+    message?: unknown;
+    error?: unknown;
+  };
+
+  if (typeof record.message === "string" || Array.isArray(record.message)) {
+    return { message: record.message };
+  }
+
+  // GlobalExceptionFilter historically put Nest's payload under `error`.
+  if (typeof record.error === "object" && record.error !== null) {
+    const nested = (record.error as { message?: unknown }).message;
+    if (typeof nested === "string" || Array.isArray(nested)) {
+      return { message: nested };
+    }
+  }
+
+  if (typeof record.error === "string") {
+    return { message: record.error };
+  }
+
+  return {};
+}
+
 /** Envelope every paginated list endpoint of the API returns. */
 export type PaginationMeta = {
   total: number;

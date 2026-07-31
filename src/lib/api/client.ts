@@ -1,4 +1,4 @@
-import { ApiError, type ApiErrorBody } from "@/lib/api/types";
+import { ApiError, toErrorBody } from "@/lib/api/types";
 
 type RequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
@@ -46,7 +46,7 @@ class ApiClient {
 
     const responseBody: unknown = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new ApiError(response.status, this.toErrorBody(responseBody));
+      throw new ApiError(response.status, toErrorBody(responseBody));
     }
 
     return responseBody as T;
@@ -58,16 +58,6 @@ class ApiClient {
       credentials: "same-origin",
     });
     return response.ok;
-  }
-
-  private toErrorBody(body: unknown): ApiErrorBody {
-    if (typeof body === "object" && body !== null && "message" in body) {
-      const message = (body as { message?: unknown }).message;
-      if (typeof message === "string" || Array.isArray(message)) {
-        return { message: message as string | string[] };
-      }
-    }
-    return {};
   }
 }
 

@@ -1,4 +1,4 @@
-import { ApiError, type ApiErrorBody } from "@/lib/api/types";
+import { ApiError, toErrorBody } from "@/lib/api/types";
 
 const DEFAULT_API_URL = "http://localhost:3002";
 
@@ -28,20 +28,10 @@ class BackendClient {
     const body: unknown = await response.json().catch(() => ({}));
     // Response interceptor: normalize every non-success backend response.
     if (!response.ok) {
-      throw new ApiError(response.status, this.toErrorBody(body));
+      throw new ApiError(response.status, toErrorBody(body));
     }
 
     return body as T;
-  }
-
-  private toErrorBody(body: unknown): ApiErrorBody {
-    if (typeof body === "object" && body !== null && "message" in body) {
-      const message = (body as { message?: unknown }).message;
-      if (typeof message === "string" || Array.isArray(message)) {
-        return { message: message as string | string[] };
-      }
-    }
-    return {};
   }
 }
 
